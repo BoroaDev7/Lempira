@@ -1,0 +1,11 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: black;
+}
+
+#Canvas_Juego {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
