@@ -1,26 +1,82 @@
 const canvas = document.getElementById('Canvas_Juego');
 const ctx = canvas.getContext('2d');
 
+class CollisionBlock{
+    constructor({position, width, height}){
+        this.position = position
+        this.width = width
+        this.height = height
+    }
+
+    draw(){
+        ctx.fillStyle = 'rgba(255, 0, 0, 0)'
+        ctx.fillRect(this.position.x, this.position.y, this.width, this.height)
+    }
+
+    actualizar() {
+        this.draw();
+    }
+}
+
+const colisiones = [];
+const collisionblocks = [];
+
+for(let i = 0; i < plataformas.length; i+=30){
+    colisiones.push(plataformas.slice(i, i + 30))
+}
+
+colisiones.forEach((fila, y)=>{
+    fila.forEach((simbolo, x)=>{
+        width = window.innerWidth/30
+        height = window.innerHeight/20
+        if(simbolo != 0){
+            collisionblocks.push(
+                new CollisionBlock({position:{
+                    x: x * width,
+                    y: y * height
+                }, width, height})
+            )
+        }
+    })
+})
+
 function resizeCanvas() {
     /*ancho = canvas.width
     largo = canvas.height*/
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    collisionblocks.length = 0;
+    colisiones.forEach((fila, y)=>{
+        fila.forEach((simbolo, x)=>{
+            width = window.innerWidth/30
+            height = window.innerHeight/20
+            if(simbolo != 0){
+                collisionblocks.push(
+                    new CollisionBlock({position:{
+                        x: x * width,
+                        y: y * height
+                    }, width, height})
+                )
+            }
+        })
+    })
+    
 }
 
 window.addEventListener('resize', resizeCanvas);
 const gravedad = 0.19;
 
 class Player {
-    constructor(position) {
+    constructor(position, collisionblocks) {
         this.position = position;
         this.velocidad = {
             x: 0,
             y: 1
         };
         this.width = canvas.width * 0.07;
-        this.height = canvas.height * 0.3;
+        this.height = canvas.height * 0.28;
         this.contadorSalto = 0;
+        this.collisionblocks = collisionblocks;
     }
 
     dibujar() {
@@ -34,14 +90,12 @@ class Player {
         //this.position.x = canvas.width * 0.07;
         //this.position.y = canvas.height * 0.3;
         this.dibujar();
-
         //Validacion de bordes
         if (this.position.x + this.velocidad.x < 0) {
             this.velocidad.x = 0;
         } else if (this.position.x + this.velocidad.x + this.width > canvas.width){
             this.velocidad.x = 0;
         }
-        
         this.position.x += this.velocidad.x;
         this.position.y += this.velocidad.y;
 
@@ -57,13 +111,31 @@ class Player {
         } else {
             this.velocidad.y = 0;
         }
-    
+        this.revisarCollisionVertical();
     }
 
     saltar() {
         if (this.contadorSalto < 2) {  
             this.velocidad.y = -10;
             this.contadorSalto++;  
+        }
+    }
+
+    revisarCollisionVertical(){
+        for(let i = 0; i < this.collisionblocks.length; i++){
+            const bloque = this.collisionblocks[i];
+            if (this.position.y + this.height >= bloque.position.y &&
+                this.position.y  + this.height <= bloque.position.y + bloque.height &&
+                this.position.x <= bloque.position.x + bloque.width &&
+                this.position.x + this.width >= bloque.position.x 
+                ){
+                    if (this.velocidad.y > 0){
+                        this.velocidad.y = 0
+                        this.position.y = bloque.position.y - this.height - 0.1
+                        this.contadorSalto = 0;
+                        break
+                    }
+                }
         }
     }
 }
@@ -164,7 +236,7 @@ class Enemy {
     }
 }
 
-const player = new Player({ x: 1, y: (canvas.height - canvas.height * 0.72)});
+const player = new Player({ x: 1, y: (canvas.height - canvas.height * 0.72)}, collisionblocks);
 const enemy = new Enemy({ x: window.innerWidth - (window.innerWidth * 0.07), y: (canvas.height - canvas.height * 0.72)});
 
 class Sprite {
@@ -186,7 +258,7 @@ class Sprite {
 
 const background = new Sprite({
     position: { x: 0, y: 0 },
-    imagenSrc: './Imagenes/origbig2.png',
+    imagenSrc: './Imagenes/mapa.png',
 });
 
 const keys = {
@@ -202,6 +274,10 @@ function animar() {
     enemy.actualizar();
     player.velocidad.x = 0;
     enemy.velocidad.x = 0;
+
+    collisionblocks.forEach(collisionblock =>{
+        collisionblock.actualizar()
+    })
 
     if (keys.d.pressed) {
         player.velocidad.x = 5;
