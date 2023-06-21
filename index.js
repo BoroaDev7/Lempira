@@ -67,7 +67,7 @@ window.addEventListener('resize', resizeCanvas);
 const gravedad = 0.19;
 
 class Player {
-    constructor(position, collisionblocks) {
+    constructor(position, collisionblocks,scale=1,imagenSrc,framesMax=1,offset={x:0,y:0},sprites) {
         this.position = position;
         this.velocidad = {
             x: 0,
@@ -77,19 +77,55 @@ class Player {
         this.height = canvas.height * 0.28;
         this.contadorSalto = 0;
         this.collisionblocks = collisionblocks;
+        this.image = new Image();
+        this.image.src = imagenSrc;
+        this.scale=scale;
+        this.framesMax= framesMax;
+        this.frameCurrent=0;
+        this.framesTiempo=0;
+        this.framesTiempoMax=10;
+        this.offset=offset;
+        this.sprites=sprites;
+        for(const sprite in sprites){
+            sprites[sprite].image = new Image();
+            sprites[sprite].image.src = sprites[sprite].imagenSrc;
+        }
     }
 
     dibujar() {
-        ctx.fillStyle = 'black';
-        ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
-    }
+       ctx.drawImage(
+            this.image,
+            this.frameCurrent * (this.image.width/this.framesMax) ,
+            0,
+            this.image.width/this.framesMax,
+            this.image.height,
+            this.position.x - this.offset.x,
+            this.position.y - this.offset.y,
+            (this.image.width/this.framesMax) * this.scale,
+            this.image.height * this.scale,
+       );
 
+    }
+    AnimarFrames(){
+        this.framesTiempo++
+
+        if(this.framesTiempo % this.framesTiempoMax === 0){
+        if(this.frameCurrent<this.framesMax-1){
+         this.frameCurrent++   
+        }
+        else{
+            this.frameCurrent=0
+        }
+    }
+    }
     actualizar() {
         this.width = canvas.width * 0.07;
         this.height = canvas.height * 0.28;
         //this.position.x = canvas.width * 0.07;
         //this.position.y = canvas.height * 0.3;
         this.dibujar();
+        this.AnimarFrames();
+
         //Validacion de bordes
         if (this.position.x + this.velocidad.x < 0) {
             this.velocidad.x = 0;
@@ -136,6 +172,33 @@ class Player {
                         break
                     }
                 }
+        }
+    }
+    cambiarSprite(sprite){
+        switch(sprite){
+            case 'normal':
+                if(this.image!==this.sprites.normal.image){
+                    this.image = this.sprites.normal.image;
+                    this.framesMax = this.sprites.normal.framesMax;
+                    this.framesTiempoMax=10;
+                }
+                
+                break;
+            case 'correr':
+                if(this.image!==this.sprites.correr.image){
+                    this.image = this.sprites.correr.image;
+                    this.framesMax = this.sprites.correr.framesMax;
+                    this.framesTiempoMax=5
+                }
+                
+                break;
+            case 'ataca':
+                if (this.image !== this.sprites.ataca.image){
+                    this.image = this.sprites.ataca.image;
+                    this.framesMax = this.sprites.ataca.framesMax;
+                }
+                break;
+        
         }
     }
 }
@@ -236,7 +299,29 @@ class Enemy {
     }
 }
 
-const player = new Player({ x: 1, y: (canvas.height - canvas.height * 0.72)}, collisionblocks);
+const player = new Player({
+     x: 1, y: (canvas.height - canvas.height * 0.72)}, 
+     collisionblocks, 
+     scale=6, 
+     './Imagenes/LempiraNormal.png',
+     framesMax=6,
+     offset={x:90,y:-25},
+     sprites= {
+        normal:{
+            imagenSrc:'./Imagenes/LempiraNormal.png',
+            framesMax:6,
+        },
+        correr:{
+            imagenSrc:'./Imagenes/LempiraCorriendo.png',
+            framesMax:8,
+            framesTiempoMax:8
+        },
+        ataca:{
+            imagenSrc:'./Imagenes/Ataque_lempira.png',
+            framesMax:7,
+        }
+     }
+     );
 const enemy = new Enemy({ x: window.innerWidth - (window.innerWidth * 0.07), y: (canvas.height - canvas.height * 0.72)});
 
 class Sprite {
@@ -279,10 +364,13 @@ function animar() {
         collisionblock.actualizar()
     })
 
+    player.cambiarSprite('normal');
     if (keys.d.pressed) {
         player.velocidad.x = 5;
+        player.cambiarSprite('correr');
     } else if (keys.a.pressed) {
         player.velocidad.x = -5;
+        player. cambiarSprite('correr');
     }
 
     requestAnimationFrame(animar);
