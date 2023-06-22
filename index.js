@@ -204,7 +204,7 @@ class Player {
 }
 
 class Enemy {
-    constructor(position) {
+    constructor(position, scale=1,imagenSrc,framesMax=1,offset={x:0,y:0},sprites) {
         this.position = position;
         this.velocidad = {
             x: 0,
@@ -216,11 +216,47 @@ class Enemy {
         this.enSuelo = false;
         this.probabilidadSaltoDoble = 0.5;
         this.tiempoSiguienteSalto = 0;
+        this.image = new Image();
+        this.image.src = imagenSrc;
+        this.scale=scale;
+        this.framesMax= framesMax;
+        this.frameCurrent=0;
+        this.framesTiempo=0;
+        this.framesTiempoMax=10;
+        this.offset=offset;
+        this.sprites=sprites;
+        for(const sprite in sprites){
+            sprites[sprite].image = new Image();
+            sprites[sprite].image.src = sprites[sprite].imagenSrc;
+        }
+
     }
 
     dibujar() {
-        ctx.fillStyle = 'black';
-        ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+       ctx.drawImage(
+            this.image,
+            this.frameCurrent * (this.image.width/this.framesMax) ,
+            0,
+            this.image.width/this.framesMax,
+            this.image.height,
+            this.position.x - this.offset.x,
+            this.position.y - this.offset.y,
+            (this.image.width/this.framesMax) * this.scale,
+            this.image.height * this.scale,
+       );
+
+    }
+    AnimarFrames(){
+        this.framesTiempo++
+
+        if(this.framesTiempo % this.framesTiempoMax === 0){
+        if(this.frameCurrent<this.framesMax-1){
+         this.frameCurrent++   
+        }
+        else{
+            this.frameCurrent=0
+        }
+    }
     }
 
     actualizar() {
@@ -263,6 +299,7 @@ class Enemy {
         }
 
         this.dibujar();
+        this.AnimarFrames();
 
         //Validacion de bordes
         if (this.position.x + this.velocidad.x < 0) {
@@ -297,6 +334,33 @@ class Enemy {
             this.enSuelo = false; 
         }
     }
+    cambiarSprite(sprite){
+        switch(sprite){
+            case 'normal':
+                if(this.image!==this.sprites.normal.image){
+                    this.image = this.sprites.normal.image;
+                    this.framesMax = this.sprites.normal.framesMax;
+                    this.framesTiempoMax=10;
+                }
+                
+                break;
+            case 'correr':
+                if(this.image!==this.sprites.correr.image){
+                    this.image = this.sprites.correr.image;
+                    this.framesMax = this.sprites.correr.framesMax;
+                    this.framesTiempoMax=5
+                }
+                
+                break;
+            case 'ataca':
+                if (this.image !== this.sprites.ataca.image){
+                    this.image = this.sprites.ataca.image;
+                    this.framesMax = this.sprites.ataca.framesMax;
+                }
+                break;
+        
+        }
+    }
 }
 
 const player = new Player({
@@ -322,8 +386,28 @@ const player = new Player({
         }
      }
      );
-const enemy = new Enemy({ x: window.innerWidth - (window.innerWidth * 0.07), y: (canvas.height - canvas.height * 0.72)});
-
+const enemy = new Enemy({
+    x: window.innerWidth - (window.innerWidth * 0.07), y: (canvas.height - canvas.height * 0.72)}, 
+    scale=6, 
+    './Imagenes/EspanolNormal.png',
+    framesMax=5,
+    offset={x:90,y:-25},
+    sprites= {
+       normal:{
+           imagenSrc:'./Imagenes/EspanolNormal.png',
+           framesMax:5,
+       },
+       correr:{
+           imagenSrc:'./Imagenes/EspanolCorriendo.png',
+           framesMax:6,
+           framesTiempoMax:8
+       },
+       ataca:{
+           imagenSrc:'./Imagenes/ataque_Espanol.png',
+           framesMax:5,
+       }
+    }
+    );
 class Sprite {
     constructor({ position, imagenSrc }) {
         this.position = position;
