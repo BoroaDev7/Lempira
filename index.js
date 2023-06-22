@@ -99,10 +99,7 @@ class Player {
     }
 
     dibujar() {
-        if (this.isAttacking){
-            ctx.fillStyle = 'red'
-            ctx.fillRect(this.attackBox.position.x+this.width*0.55, this.attackBox.position.y+this.height/1.5, this.attackBox.width-this.height*0.1, this.attackBox.height)
-        }
+        
         ctx.drawImage(
             this.image,
             this.frameCurrent * (this.image.width/this.framesMax) ,
@@ -186,6 +183,7 @@ class Player {
         }
     }
     cambiarSprite(sprite){
+        if(this.image===this.sprites.ataca.image && this.frameCurrent<this.sprites.ataca.framesMax-1 )return
         switch(sprite){
             case 'normal':
                 if(this.image!==this.sprites.normal.image){
@@ -214,6 +212,7 @@ class Player {
     }
 
     attack(){
+        this.cambiarSprite('ataca');
         this.isAttacking=true
         setTimeout(() => {
             this.isAttacking=false
@@ -397,6 +396,7 @@ class Enemy {
     }
 
     cambiarSprite(sprite){
+    if(this.image===this.sprites.ataca.image && this.frameCurrent<this.sprites.ataca.framesMax-1 )return
         switch(sprite){
             case 'normal':
                 if(this.image!==this.sprites.normal.image){
@@ -425,6 +425,7 @@ class Enemy {
     }
 
     attack(){
+        this.cambiarSprite('ataca');
         this.isAttacking=true
         setTimeout(() => {
             this.isAttacking=false
