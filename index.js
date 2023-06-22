@@ -76,6 +76,7 @@ class Player {
         this.width = canvas.width * 0.07;
         this.height = canvas.height * 0.28;
         this.contadorSalto = 0;
+        this.health=100;
         this.collisionblocks = collisionblocks;
         this.image = new Image();
         this.image.src = imagenSrc;
@@ -205,6 +206,7 @@ class Player {
                 if (this.image !== this.sprites.ataca.image){
                     this.image = this.sprites.ataca.image;
                     this.framesMax = this.sprites.ataca.framesMax;
+                    this.framesTiempoMax=10
                 }
                 break;
         
@@ -244,6 +246,7 @@ class Enemy {
         this.offset=offset;
         this.sprites=sprites;
         this.isAttacking
+        this.health=100;
         this.attackBox = {
             position: this.position,
             width: this.width*6,
@@ -257,10 +260,7 @@ class Enemy {
     }
 
     dibujar() {
-        if (this.isAttacking){
-            ctx.fillStyle = 'red'
-            ctx.fillRect(this.attackBox.position.x-this.width*0.55, this.attackBox.position.y+this.height/1.5, this.attackBox.width-this.height*0.1, this.attackBox.height)
-        }
+        
        ctx.drawImage(
             this.image,
             this.frameCurrent * (this.image.width/this.framesMax) ,
@@ -418,6 +418,7 @@ class Enemy {
                 if (this.image !== this.sprites.ataca.image){
                     this.image = this.sprites.ataca.image;
                     this.framesMax = this.sprites.ataca.framesMax;
+                    this.framesTiempoMax=8
                 }
                 break;
         
@@ -574,6 +575,8 @@ function animar() {
         && player.attackBox.position.y <= enemy.position.y + enemy.height 
         && player.isAttacking){
         player.isAttacking = false
+        enemy.health -= '1'
+        document.querySelector('#barraEnemigo').style.width = enemy.health + '%'
         console.log('GG')
     }
 
@@ -583,6 +586,9 @@ function animar() {
         && enemy.attackBox.position.y <= player.position.y + player.height 
         && enemy.isAttacking){
         enemy.isAttacking = false
+        player.health -= '1'
+        document.querySelector('#barraJugador').style.width = player.health + '%'
+
         console.log('GG2')
     }
 
@@ -617,5 +623,8 @@ window.addEventListener('keyup', (event) => {
         case 'a':
             keys.a.pressed = false;
             break;
+        case ' ':
+            player.attack()
+        break;
     }
 });
