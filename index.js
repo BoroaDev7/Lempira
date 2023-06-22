@@ -64,7 +64,7 @@ function resizeCanvas() {
 }
 
 window.addEventListener('resize', resizeCanvas);
-const gravedad = 0.19;
+const gravedad = 0.15;
 
 class Player {
     constructor(position, collisionblocks,scale=1,imagenSrc,framesMax=1,offset={x:0,y:0},sprites) {
