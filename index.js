@@ -86,6 +86,12 @@ class Player {
         this.framesTiempoMax=10;
         this.offset=offset;
         this.sprites=sprites;
+        this.isAttacking
+        this.attackBox = {
+            position: this.position,
+            width: this.width*6,
+            height: this.height*0.8
+        }
         for(const sprite in sprites){
             sprites[sprite].image = new Image();
             sprites[sprite].image.src = sprites[sprite].imagenSrc;
@@ -93,7 +99,11 @@ class Player {
     }
 
     dibujar() {
-       ctx.drawImage(
+        if (this.isAttacking){
+            ctx.fillStyle = 'red'
+            ctx.fillRect(this.attackBox.position.x+this.width*0.55, this.attackBox.position.y+this.height/1.5, this.attackBox.width-this.height*0.1, this.attackBox.height)
+        }
+        ctx.drawImage(
             this.image,
             this.frameCurrent * (this.image.width/this.framesMax) ,
             0,
@@ -104,6 +114,7 @@ class Player {
             (this.image.width/this.framesMax) * this.scale,
             this.image.height * this.scale,
        );
+        
 
     }
     AnimarFrames(){
@@ -201,10 +212,17 @@ class Player {
         
         }
     }
+
+    attack(){
+        this.isAttacking=true
+        setTimeout(() => {
+            this.isAttacking=false
+        }, 100)
+    }
 }
 
 class Enemy {
-    constructor(position, scale=1,imagenSrc,framesMax=1,offset={x:0,y:0},sprites) {
+    constructor(position,collisionblocks, scale=1,imagenSrc,framesMax=1,offset={x:0,y:0},sprites) {
         this.position = position;
         this.velocidad = {
             x: 0,
@@ -215,6 +233,7 @@ class Enemy {
         this.contadorSalto = 0;
         this.enSuelo = false;
         this.probabilidadSaltoDoble = 0.5;
+        this.collisionblocks=collisionblocks
         this.tiempoSiguienteSalto = 0;
         this.image = new Image();
         this.image.src = imagenSrc;
@@ -225,6 +244,12 @@ class Enemy {
         this.framesTiempoMax=10;
         this.offset=offset;
         this.sprites=sprites;
+        this.isAttacking
+        this.attackBox = {
+            position: this.position,
+            width: this.width*6,
+            height: this.height*0.8 
+        }
         for(const sprite in sprites){
             sprites[sprite].image = new Image();
             sprites[sprite].image.src = sprites[sprite].imagenSrc;
@@ -233,6 +258,10 @@ class Enemy {
     }
 
     dibujar() {
+        if (this.isAttacking){
+            ctx.fillStyle = 'red'
+            ctx.fillRect(this.attackBox.position.x-this.width*0.55, this.attackBox.position.y+this.height/1.5, this.attackBox.width-this.height*0.1, this.attackBox.height)
+        }
        ctx.drawImage(
             this.image,
             this.frameCurrent * (this.image.width/this.framesMax) ,
@@ -287,7 +316,8 @@ class Enemy {
         }
 
         if (this.tiempoSiguienteSalto <= 0) {
-            if (Math.random() * 1 < this.probabilidadSaltoDoble) {
+            const probabilidadSaltoDoble = Math.random();
+            if (probabilidadSaltoDoble <= this.probabilidadSaltoDoble) {
                 this.saltar();
                 this.saltar();
             } else {
@@ -296,6 +326,19 @@ class Enemy {
             this.tiempoSiguienteSalto = Math.random() * 7000 + 2000;
         } else {
             this.tiempoSiguienteSalto -= 16;
+        }
+
+        const distanciaAtaqueX = player.position.x - this.position.x;
+        const distanciaAtaqueY = player.position.y - this.position.y;
+        const distanciaAtaque = Math.sqrt(
+            distanciaAtaqueX * distanciaAtaqueX + distanciaAtaqueY * distanciaAtaqueY
+        );
+
+        if (distanciaAtaque <= this.attackBox.width && enemy.position.x+enemy.width*0.15 >= player.position.x+player.width*0.4) {
+            const probabilidadAtaque = Math.random();
+            if (probabilidadAtaque <= 1.0) {
+                this.attack(); 
+            }
         }
 
         this.dibujar();
@@ -323,17 +366,36 @@ class Enemy {
         } else {
             this.velocidad.y = 0;
         }
-
+        this.revisarCollisionVertical()
         
     }
 
     saltar() {
         if (this.contadorSalto < 2 && this.enSuelo) {  
-            this.velocidad.y = -15;
+            this.velocidad.y = -10;
             this.contadorSalto++;
             this.enSuelo = false; 
         }
     }
+
+    revisarCollisionVertical(){
+        for(let i = 0; i < this.collisionblocks.length; i++){
+            const bloque = this.collisionblocks[i];
+            if (this.position.y + this.height >= bloque.position.y &&
+                this.position.y  + this.height <= bloque.position.y + bloque.height &&
+                this.position.x <= bloque.position.x + bloque.width &&
+                this.position.x + this.width >= bloque.position.x 
+                ){
+                    if (this.velocidad.y > 0){
+                        this.velocidad.y = 0
+                        this.position.y = bloque.position.y - this.height - 0.1
+                        this.contadorSalto = 0;
+                        break
+                    }
+                }
+        }
+    }
+
     cambiarSprite(sprite){
         switch(sprite){
             case 'normal':
@@ -360,6 +422,13 @@ class Enemy {
                 break;
         
         }
+    }
+
+    attack(){
+        this.isAttacking=true
+        setTimeout(() => {
+            this.isAttacking=false
+        }, 100)
     }
 }
 
@@ -425,7 +494,8 @@ const player = new Player({
      );
 const enemy = new Enemy({
     x: window.innerWidth - (window.innerWidth * 0.07), y: (canvas.height - canvas.height * 0.72)}, 
-    scale=6, 
+    collisionblocks
+    ,scale=6, 
     './Imagenes/EspanolNormal.png',
     framesMax=5,
     offset={x:90,y:-25},
@@ -497,6 +567,24 @@ function animar() {
         player.velocidad.x = -5;
         player. cambiarSprite('correr');
     }
+    if (player.attackBox.position.x + player.attackBox.width >= enemy.position.x 
+        && player.attackBox.position.x <= enemy.position.x + enemy.width
+        && player.attackBox.position.y + player.attackBox.height >= enemy.position.y
+        && player.attackBox.position.y <= enemy.position.y + enemy.height 
+        && player.isAttacking){
+        player.isAttacking = false
+        console.log('GG')
+    }
+
+    if (enemy.attackBox.position.x <= player.position.x + player.width*1.5
+        && enemy.attackBox.position.x + enemy.attackBox.width >= player.position.x
+        && enemy.attackBox.position.y + enemy.attackBox.height >= player.position.y
+        && enemy.attackBox.position.y <= player.position.y + player.height 
+        && enemy.isAttacking){
+        enemy.isAttacking = false
+        console.log('GG2')
+    }
+
 
     requestAnimationFrame(animar);
 }
@@ -514,6 +602,9 @@ window.addEventListener('keydown', (event) => {
         case 'w':
             player.saltar();
             break;
+        case ' ':
+            player.attack()
+        break;
     }
 });
 
