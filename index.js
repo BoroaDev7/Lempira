@@ -432,6 +432,43 @@ class Enemy {
     }
 }
 
+
+class PowerUp {
+    constructor(position, duration, effect,imageSrc,) {
+      this.position = position;
+      this.width = canvas.width * 0.03;
+      this.height = canvas.width * 0.03;
+      this.duration = duration;
+      this.effect = effect;
+      this.image = new Image();
+      this.image.src = imageSrc;
+    }
+  
+    draw() {
+        ctx.drawImage(
+            this.image,
+            this.image.width/this.framesMax,
+            this.image.height,
+            this.position.x - this.offset.x,
+            this.position.y - this.offset.y,
+            (this.image.width/this.framesMax) * this.scale,
+            this.image.height * this.scale,
+       );
+        ctx.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+
+    }
+    actualizar() {
+        this.draw();
+        setInterval(this.draw(), 200000);
+    }
+  }
+  
+  const powerUp = new PowerUp({
+    x: 5, y: (canvas.height - canvas.height * 0.72),
+    duration: 10000,
+    effect: 'correrRapido',
+    imageSrc: './Imagenes/apple.png',
+});
 const player = new Player({
      x: 1, y: (canvas.height - canvas.height * 0.72)}, 
      collisionblocks, 
@@ -478,6 +515,10 @@ const enemy = new Enemy({
        }
     }
     );
+    
+  
+
+
 class Sprite {
     constructor({ position, imagenSrc }) {
         this.position = position;
