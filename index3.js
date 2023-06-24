@@ -21,8 +21,8 @@ class CollisionBlock{
 const colisiones = [];
 const collisionblocks = [];
 
-for(let i = 0; i < plataformas.length; i+=30){
-    colisiones.push(plataformas.slice(i, i + 30))
+for(let i = 0; i < plataformas3.length; i+=30){
+    colisiones.push(plataformas3.slice(i, i + 30))
 }
 
 colisiones.forEach((fila, y)=>{
@@ -544,7 +544,7 @@ class Sprite {
 
 const background = new Sprite({
     position: { x: 0, y: 0 },
-    imagenSrc: './Imagenes/mapa.png',
+    imagenSrc: './Imagenes/mapa3.png',
 });
 
 const keys = {
