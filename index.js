@@ -419,9 +419,6 @@ class Enemy {
                 if (this.image !== this.sprites.ataca.image){
                     this.image = this.sprites.ataca.image;
                     this.framesMax = this.sprites.ataca.framesMax;
-                    this.framesTiempoMax=8
-                    this.offset.x=this.sprites.ataca.offset.x
-                    this.offset.y=this.sprites.ataca.offset.y
                 }
                 break;
         
@@ -572,34 +569,6 @@ function animar() {
     } else if (keys.a.pressed) {
         player.velocidad.x = -5;
         player. cambiarSprite('correr');
-    }
-    if (player.attackBox.position.x + player.attackBox.width >= enemy.position.x 
-        && player.attackBox.position.x <= enemy.position.x + enemy.width
-        && player.attackBox.position.y + player.attackBox.height >= enemy.position.y
-        && player.attackBox.position.y <= enemy.position.y + enemy.height 
-        && player.isAttacking){
-        player.isAttacking = false
-        enemy.health -= '10'
-        document.querySelector('#barraEnemigo').style.width = enemy.health + '%'
-        console.log('GG')
-    }
-
-    if (enemy.attackBox.position.x <= player.position.x + player.width*1.5
-        && enemy.attackBox.position.x + enemy.attackBox.width >= player.position.x
-        && enemy.attackBox.position.y + enemy.attackBox.height >= player.position.y
-        && enemy.attackBox.position.y <= player.position.y + player.height 
-        && enemy.isAttacking){
-        enemy.isAttacking = false
-        player.health -= '1'
-        document.querySelector('#barraJugador').style.width = player.health + '%'
-
-        console.log('GG2')
-    }
-    if(enemy.health <= 0 || player.health <= 0){
-        alert('Game Over Gana Lempira ')
-        window.onload = function() {
-            location.reload();
-          };
     }
 
     requestAnimationFrame(animar);
