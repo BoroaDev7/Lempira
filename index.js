@@ -437,50 +437,43 @@ class Enemy {
     }
 }
 
-
 class PowerUp {
-    constructor(position, duration, effect,imageSrc,) {
+    constructor({position, imagenSrc,duration, effect }) {
       this.position = position;
-      this.width = canvas.width * 0.03;
-      this.height = canvas.width * 0.03;
+      this.width =50;
+      this.height = 50;
       this.duration = duration;
-      this.effect = effect;
       this.image = new Image();
-      this.image.src = imageSrc;
+      this.image.src = imagenSrc;
+      this.effect = effect;
+     
     }
   
-    draw() {
-        ctx.drawImage(
-            this.image,
-            this.image.width/this.framesMax,
-            this.image.height,
-            this.position.x - this.offset.x,
-            this.position.y - this.offset.y,
-            (this.image.width/this.framesMax) * this.scale,
-            this.image.height * this.scale,
-       );
+    dibujar() {
+      if (this.image.complete) {
         ctx.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
-
+      }
     }
+  
     actualizar() {
-        this.draw();
-        setInterval(this.draw(), 200000);
+      this.dibujar();
     }
   }
-  
-  const powerUp = new PowerUp({
-    x: 5, y: (canvas.height - canvas.height * 0.72),
+
+  const power_up = new PowerUp({
+    position: { x: 1000, y: canvas.height - this.height  },
+    imagenSrc: './Imagenes/apple.png',
     duration: 10000,
     effect: 'correrRapido',
-    imageSrc: './Imagenes/apple.png',
 });
 const player = new Player({
      x: 1, y: (canvas.height - canvas.height * 0.72)}, 
+     
      collisionblocks, 
      scale=6, 
      './Imagenes/LempiraNormal.png',
      framesMax=6,
-     offset={x:90,y:-25},
+     offset={x:90,y:-((canvas.height - canvas.height * 0.72)*0.58)},
      sprites= {
         normal:{
             imagenSrc:'./Imagenes/LempiraNormal.png',
@@ -556,6 +549,7 @@ function animar() {
     resizeCanvas();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     background.actualizar();
+    power_up.actualizar();
     player.actualizar();
     enemy.actualizar();
     player.velocidad.x = 0;
@@ -606,6 +600,7 @@ function animar() {
 }
 
 animar();
+console.log(player.position.x, player.position.y),
 
 window.addEventListener('keydown', (event) => {
     switch (event.key) {
