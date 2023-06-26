@@ -141,7 +141,7 @@ class Player {
                 this.image.width/this.framesMax,
                 this.image.height,
                 -this.position.x - this.offset.x-this.width,
-                this.position.y,
+                this.position.y-this.offset.y,
                 (this.image.width/this.framesMax) * this.scale,
                 this.image.height * this.scale,
            );
@@ -551,20 +551,7 @@ class PowerUp {
     
   }
 
-  const power_up = new PowerUp({
-    position: { x: 1000, y: 680},
-    imagenSrc: './Imagenes/apple.png',
-    duration: 10000,
-    effect: 'correrRapido',
-});
 
-var off = 0;
-
-if (canvas.height <= 150) {
-  off = -1*((canvas.height - canvas.height * 0.72) * 0.58) + 10;
-} else {
-  off = ((canvas.height - canvas.height * 0.72) * 0.58) + 10;
-}
 
 var off = 0;
 
@@ -622,6 +609,17 @@ const enemy = new Enemy({
        }
     }
     );
+
+    var PU_aleatY = Math.floor(Math.random() * (600 - 250 + 1)) + 250;
+    var PU_aleatx = Math.floor(Math.random() * (1000 - 150 + 1)) + 150;
+
+    const power_up = new PowerUp({
+        position: { x: PU_aleatx, y: enemy.height+PU_aleatY},
+        imagenSrc: './Imagenes/apple.png',
+        duration: 10000,
+        effect: 'correrRapido',
+    });
+    
     
 class Sprite {
     constructor({ position, imagenSrc }) {
