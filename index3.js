@@ -73,12 +73,16 @@ class Player {
             x: 0,
             y: 1
         };
-        this.width = canvas.width * 0.07;
-        this.height = canvas.height * 0.28;
+        this.width = 64;
+        this.height = 64;
         this.contadorSalto = 0;
         this.health=100;
         this.collisionblocks = collisionblocks;
         this.image = new Image();
+        this.image.onload = () => {
+            this.width = this.image.width;
+            this.height = this.image.height;
+        };
         this.image.src = imagenSrc;
         this.scale=scale;
         this.framesMax= framesMax;
@@ -97,10 +101,25 @@ class Player {
             sprites[sprite].image = new Image();
             sprites[sprite].image.src = sprites[sprite].imagenSrc;
         }
+        this.lastDireccion='derecha'
+    }
+    restart(){
+        this.position = position;
+        this.velocidad = {
+            x: 0,
+            y: 1
+        };
+        this.health=100;
+
+        this.frameCurrent=0;
+        this.framesTiempo=0;
+        this.framesTiempoMax=10;
     }
 
+  
     dibujar() {
-        
+       
+        if(this.lastDireccion==='derecha'){
         ctx.drawImage(
             this.image,
             this.frameCurrent * (this.image.width/this.framesMax) ,
@@ -112,6 +131,22 @@ class Player {
             (this.image.width/this.framesMax) * this.scale,
             this.image.height * this.scale,
        );
+        }
+        else if(this.lastDireccion==='izquierda'){
+            ctx.scale(-1, 1);
+            ctx.drawImage(
+                this.image,
+                this.frameCurrent * (this.image.width/this.framesMax) ,
+                0,
+                this.image.width/this.framesMax,
+                this.image.height,
+                -this.position.x - this.offset.x-this.width,
+                this.position.y,
+                (this.image.width/this.framesMax) * this.scale,
+                this.image.height * this.scale,
+           );
+           ctx.scale(-1, 1);
+        }
         
 
     }
@@ -128,12 +163,15 @@ class Player {
     }
     }
     actualizar() {
-        this.width = canvas.width * 0.07;
-        this.height = canvas.height * 0.28;
+        this.width = canvas.width * 0.07;;
+        this.height =  (this.image.height * this.scale)-20;
         //this.position.x = canvas.width * 0.07;
         //this.position.y = canvas.height * 0.3;
         this.dibujar();
         this.AnimarFrames();
+
+
+      
 
         //Validacion de bordes
         if (this.position.x + this.velocidad.x < 0) {
@@ -222,6 +260,7 @@ class Player {
     }
 }
 
+
 class Enemy {
     constructor(position,collisionblocks, scale=1,imagenSrc,framesMax=1,offset={x:0,y:0},sprites) {
         this.position = position;
@@ -262,17 +301,36 @@ class Enemy {
 
     dibujar() {
         
-       ctx.drawImage(
-            this.image,
-            this.frameCurrent * (this.image.width/this.framesMax) ,
-            0,
-            this.image.width/this.framesMax,
-            this.image.height,
-            this.position.x - this.offset.x,
-            this.position.y - this.offset.y,
-            (this.image.width/this.framesMax) * this.scale,
-            this.image.height * this.scale,
-       );
+        if(this.velocidad.x<=0){
+
+            
+            ctx.drawImage(
+                this.image,
+                this.frameCurrent * (this.image.width/this.framesMax) ,
+                0,
+                this.image.width/this.framesMax,
+                this.image.height,
+                this.position.x - this.offset.x,
+                this.position.y - this.offset.y,
+                (this.image.width/this.framesMax) * this.scale,
+                this.image.height * this.scale,
+            );
+        }
+        else if (this.velocidad.x>=0){
+            ctx.scale(-1, 1);
+            ctx.drawImage(
+                this.image,
+                this.frameCurrent * (this.image.width/this.framesMax) ,
+                0,
+                this.image.width/this.framesMax,
+                this.image.height,
+                -this.position.x - this.offset.x-this.width,
+                this.position.y,
+                (this.image.width/this.framesMax) * this.scale,
+                this.image.height * this.scale,
+           );
+           ctx.scale(-1, 1);
+        }
 
     }
     AnimarFrames(){
@@ -290,7 +348,7 @@ class Enemy {
 
     actualizar() {
         this.width = canvas.width * 0.07;
-        this.height = canvas.height * 0.28;
+        this.height = (this.image.height * this.scale) -20;
         //this.position.x = canvas.width * 0.07;
         //this.position.y = canvas.height * 0.3;
 
@@ -399,14 +457,6 @@ class Enemy {
     cambiarSprite(sprite){
     if(this.image===this.sprites.ataca.image && this.frameCurrent<this.sprites.ataca.framesMax-1 )return
         switch(sprite){
-            case 'normal':
-                if(this.image!==this.sprites.normal.image){
-                    this.image = this.sprites.normal.image;
-                    this.framesMax = this.sprites.normal.framesMax;
-                    this.framesTiempoMax=10;
-                }
-                
-                break;
             case 'correr':
                 if(this.image!==this.sprites.correr.image){
                     this.image = this.sprites.correr.image;
@@ -429,9 +479,11 @@ class Enemy {
     }
 
     attack(){
+        
         this.cambiarSprite('ataca');
         this.isAttacking=true
         setTimeout(() => {
+            this.cambiarSprite('normal')
             this.isAttacking=false
         }, 100)
     }
@@ -439,48 +491,89 @@ class Enemy {
 
 
 class PowerUp {
-    constructor(position, duration, effect,imageSrc,) {
+    constructor({position, imagenSrc,duration, effect }) {
       this.position = position;
-      this.width = canvas.width * 0.03;
-      this.height = canvas.width * 0.03;
+      this.width =50;
+      this.height = 50;
       this.duration = duration;
-      this.effect = effect;
       this.image = new Image();
-      this.image.src = imageSrc;
-    }
-  
-    draw() {
-        ctx.drawImage(
-            this.image,
-            this.image.width/this.framesMax,
-            this.image.height,
-            this.position.x - this.offset.x,
-            this.position.y - this.offset.y,
-            (this.image.width/this.framesMax) * this.scale,
-            this.image.height * this.scale,
-       );
-        ctx.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+      this.image.src = imagenSrc;
+      this.effect = effect;
+      this.colisionada = false;
+      this.existe=true;
+      this.activado = false;
 
     }
-    actualizar() {
-        this.draw();
-        setInterval(this.draw(), 200000);
-    }
-  }
   
-  const powerUp = new PowerUp({
-    x: 5, y: (canvas.height - canvas.height * 0.72),
+    dibujar() {
+        
+      if (this.image.complete) {
+        ctx.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+      }
+    }
+    
+    actualizar() {
+        const distanciaX = this.position.x - player.position.x;
+        const distanciaY = this.position.y - player.position.y;
+        const distancia = Math.sqrt(distanciaX * distanciaX + distanciaY * distanciaY);
+      
+        if (this.existe) {
+          if (distancia < power_up.width / 2 + this.width / 2) {
+            console.log('colision');
+            this.colisionada = true;
+            this.activado = true;
+            this.existe=false;
+          }
+        }
+      
+        if (this.activado) {
+          if (player.velocidad.x < 0) {
+            player.velocidad.x = -15;
+            setTimeout(() => {
+              player.velocidad.x = 1;
+              this.activado = false;
+            }, 3000);
+          } else if (player.velocidad.x > 0) {
+            player.velocidad.x = 15;
+            setTimeout(() => {
+              player.velocidad.x = 1;
+              this.activado = false;
+            }, 3000);
+          }
+        }
+      
+        if (!this.colisionada) {
+          this.dibujar();
+        }
+      }
+      
+    
+    
+  }
+
+  const power_up = new PowerUp({
+    position: { x: 1000, y: 680},
+    imagenSrc: './Imagenes/apple.png',
     duration: 10000,
     effect: 'correrRapido',
-    imageSrc: './Imagenes/apple.png',
 });
+var off = 0;
+
+if (canvas.height <= 150) {
+  off = -1*((canvas.height - canvas.height * 0.72) * 0.58) + 10;
+} else {
+  off = ((canvas.height - canvas.height * 0.72) * 0.58) + 10;
+}
+
 const player = new Player({
      x: 1, y: (canvas.height - canvas.height * 0.72)}, 
+     
      collisionblocks, 
      scale=6, 
      './Imagenes/LempiraNormal.png',
      framesMax=6,
-     offset={x:90,y:-25},
+     
+     offset={x:90,y:off},
      sprites= {
         normal:{
             imagenSrc:'./Imagenes/LempiraNormal.png',
@@ -497,34 +590,30 @@ const player = new Player({
         }
      }
      );
+
+
 const enemy = new Enemy({
     x: window.innerWidth - (window.innerWidth * 0.07), y: (canvas.height - canvas.height * 0.72)}, 
     collisionblocks
     ,scale=6, 
-    './Imagenes/EspanolNormal.png',
-    framesMax=5,
-    offset={x:90,y:-25},
+    './Imagenes/Espanol3_Corriendo.png',
+    framesMax=6,
+    offset={x:90,y:off},
     sprites= {
-       normal:{
-           imagenSrc:'./Imagenes/EspanolNormal.png',
-           framesMax:5,
-       },
        correr:{
-           imagenSrc:'./Imagenes/EspanolCorriendo.png',
+           imagenSrc:'./Imagenes/Espanol3_Corriendo.png',
            framesMax:6,
            framesTiempoMax:8
        },
        ataca:{
-           imagenSrc:'./Imagenes/ataque_Espanol.png',
+           imagenSrc:'./Imagenes/ataque_Espanol3.png',
            framesMax:5,
            offset:{x:90,y:20},
+
        }
     }
     );
     
-  
-
-
 class Sprite {
     constructor({ position, imagenSrc }) {
         this.position = position;
@@ -552,10 +641,27 @@ const keys = {
     a: { pressed: false },
 };
 
+let isAnimationPaused = false; 
+
+function pausarAnimacion() {
+    isAnimationPaused = true;
+}
+
+
+function reanudarAnimacion() {
+    isAnimationPaused = false;
+    requestAnimationFrame(animar);
+}
+
+
+
+
+
 function animar() {
     resizeCanvas();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     background.actualizar();
+    power_up.actualizar();
     player.actualizar();
     enemy.actualizar();
     player.velocidad.x = 0;
@@ -569,9 +675,14 @@ function animar() {
     if (keys.d.pressed) {
         player.velocidad.x = 5;
         player.cambiarSprite('correr');
+        player.lastDireccion='derecha'
     } else if (keys.a.pressed) {
         player.velocidad.x = -5;
+
+
         player. cambiarSprite('correr');
+        player.lastDireccion='izquierda'
+
     }
     if (player.attackBox.position.x + player.attackBox.width >= enemy.position.x 
         && player.attackBox.position.x <= enemy.position.x + enemy.width
@@ -595,17 +706,39 @@ function animar() {
 
         console.log('GG2')
     }
-    if(enemy.health <= 0 || player.health <= 0){
-        alert('Game Over Gana Lempira ')
-        window.onload = function() {
-            location.reload();
-          };
+    if (player.health <= 0) {
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'black';
+        ctx.font = '50px Helvetica';
+        ctx.fillText('PERDISTE, Presiona Enter para reiniciar', canvas.width / 2, 200);
+        ctx.fillStyle = 'white';
+        ctx.fillText('PERDISTE, Presiona Enter para reiniciar', canvas.width / 2 + 2, 202);
+        pausarAnimacion()
+      
     }
-
-    requestAnimationFrame(animar);
+    if(enemy.health <= 0){
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'black';
+        ctx.font = '50px Helvetica';
+        ctx.fillText('GANASTE, Presiona Enter para reiniciar', canvas.width / 2, 200);
+        ctx.fillStyle = 'white';
+        ctx.fillText('GANASTE, Presiona Enter para reiniciar', canvas.width / 2 + 2, 202);
+        pausarAnimacion()
+    }
+    if (!isAnimationPaused) {
+        requestAnimationFrame(animar);
+    }
 }
 
 animar();
+
+function Pierde(){
+    player.restart();
+    enemy.restart();
+    animar();
+
+}
+console.log(player.position.x, player.position.y),
 
 window.addEventListener('keydown', (event) => {
     switch (event.key) {
@@ -623,6 +756,13 @@ window.addEventListener('keydown', (event) => {
         break;
     }
 });
+
+window.addEventListener('keydown', (event) => {
+    if(event.key === "Enter"){
+        location.reload();
+    }
+}
+);  
 
 window.addEventListener('keyup', (event) => {
     switch (event.key) {
